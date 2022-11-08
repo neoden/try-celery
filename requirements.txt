@@ -1,0 +1,5 @@
+django
+celery
+dramatiq[rabbitmq]
+dramatiq[watch]
+django-dramatiq

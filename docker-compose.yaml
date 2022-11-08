@@ -1,0 +1,49 @@
+version: "3.2"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - 5672:5672
+      - 15672:15672
+    networks:
+    - default
+  app:
+    build: .
+    volumes:
+      - ./app:/app
+    command: python3 manage.py runserver 0.0.0.0:5000
+    ports:
+      - 5000:5000
+    depends_on:
+      - rabbitmq
+    networks:
+      - default
+  celery:
+    build: .
+    volumes:
+      - ./app:/app
+    command: celery -A app.celery worker --loglevel=info -E
+    depends_on:
+      - rabbitmq
+    networks:
+      - default
+    deploy:
+      mode: replicated
+      replicas: 2
+  dramatiq:
+    build: .
+    volumes:
+      - ./app:/app
+    command: python manage.py rundramatiq
+    depends_on:
+      - rabbitmq
+    networks:
+      - default
+    deploy:
+      mode: replicated
+      replicas: 2
+
+networks:
+  default:
+    driver: bridge
